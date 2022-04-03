@@ -63,7 +63,7 @@ resource "aws_imagebuilder_image_recipe" "code_server_recepie" {
 
   name         = "code-server-base-ubuntu"
   parent_image = "arn:aws:imagebuilder:${var.region}:aws:image/ubuntu-server-20-lts-x86/x.x.x"
-  version      = "0.0.3"
+  version      = "0.0.4"
 
   lifecycle {
     create_before_destroy = true
@@ -88,7 +88,7 @@ resource "aws_imagebuilder_component" "install_code_server_binary" {
                 "sudo systemctl enable --now code-server@root",
               ]
             }
-            name      = "InstallCodeSecer"
+            name      = "InstallCodeServer"
             onFailure = "Abort"
           },
           {
@@ -132,7 +132,7 @@ EOF
   })
   name     = "Install code-server binary"
   platform = "Linux"
-  version  = "1.0.3"
+  version  = "0.0.4"
 
   lifecycle {
     create_before_destroy = true
