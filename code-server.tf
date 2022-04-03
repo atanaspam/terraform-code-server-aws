@@ -101,10 +101,11 @@ resource "aws_launch_template" "code_server" {
 
 module "autoscaling" {
   source  = "terraform-aws-modules/autoscaling/aws"
-  version = "~> 4.0"
+  version = "~> 6.0"
 
   # Autoscaling group
   name = "code-server-asg"
+  target_group_arns = [module.alb.target_group_arns[0]]
 
   vpc_zone_identifier = var.private_subnets
   min_size            = 0
@@ -112,6 +113,8 @@ module "autoscaling" {
   desired_capacity    = 1
 
   # Launch template
-  use_lt          = true
-  launch_template = aws_launch_template.code_server.name
+  create_launch_template  = false
+  launch_template         = aws_launch_template.code_server.name
+  launch_template_version = "$Latest"
+  update_default_version  = true
 }

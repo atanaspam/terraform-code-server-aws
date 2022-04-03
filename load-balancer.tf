@@ -1,6 +1,6 @@
 module "alb" {
   source  = "terraform-aws-modules/alb/aws"
-  version = ">= 6.4.0"
+  version = "~> 6.0"
 
   name = "code-server-alb"
 
@@ -89,7 +89,7 @@ resource "aws_security_group" "code_server_lb_security_group" {
   }
 }
 
-resource "aws_autoscaling_attachment" "asg_to_alb" {
-  autoscaling_group_name = module.autoscaling.autoscaling_group_name
-  lb_target_group_arn    = module.alb.target_group_arns[0]
-}
+# resource "aws_autoscaling_attachment" "asg_to_alb" {
+#   autoscaling_group_name = module.autoscaling.autoscaling_group_name
+#   lb_target_group_arn    = module.alb.target_group_arns[0]
+# }
