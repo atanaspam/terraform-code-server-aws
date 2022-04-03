@@ -10,6 +10,9 @@ variable "private_subnets" {
   type = list(string)
 }
 
+variable "public_subnets" {
+  type = list(string)
+}
 
 variable "code_server_password" {
   type        = string
