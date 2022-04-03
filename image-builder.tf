@@ -3,7 +3,7 @@ data "aws_vpc" "target" {
 }
 
 resource "aws_cloudwatch_log_group" "code_server_recepie_log_group" {
-  name = "code-server-base-ubuntu"
+  name              = "code-server-base-ubuntu"
   retention_in_days = 5
 }
 
@@ -24,6 +24,10 @@ resource "aws_imagebuilder_image_pipeline" "code_server_pipeline" {
     image_tests_enabled = true
     timeout_minutes     = 60
   }
+
+  depends_on = [
+    aws_imagebuilder_component.install_code_server_binary
+  ]
 }
 
 resource "aws_imagebuilder_image_recipe" "code_server_recepie" {
@@ -47,6 +51,11 @@ resource "aws_imagebuilder_image_recipe" "code_server_recepie" {
     component_arn = "arn:aws:imagebuilder:${var.region}:aws:component/amazon-cloudwatch-agent-linux/x.x.x"
   }
 
+  # code-server
+  component {
+    component_arn = aws_imagebuilder_component.install_code_server_binary.arn
+  }
+
   # simple-boot-test-linux
   component {
     component_arn = "arn:aws:imagebuilder:${var.region}:aws:component/simple-boot-test-linux/x.x.x"
@@ -54,7 +63,80 @@ resource "aws_imagebuilder_image_recipe" "code_server_recepie" {
 
   name         = "code-server-base-ubuntu"
   parent_image = "arn:aws:imagebuilder:${var.region}:aws:image/ubuntu-server-20-lts-x86/x.x.x"
-  version      = "0.0.1"
+  version      = "0.0.3"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_imagebuilder_component" "install_code_server_binary" {
+  data = yamlencode({
+    phases = [
+      {
+        name = "build"
+        steps = [
+          {
+            action = "ExecuteBash"
+            inputs = {
+              commands = [
+                "echo 'hello world'",
+                "export HOME=/root",
+                "curl -fsSL https://code-server.dev/install.sh -o code-server-install.sh",
+                "sudo chmod +x code-server-install.sh",
+                "sudo ./code-server-install.sh --prefix=/usr/local",
+                "sudo systemctl enable --now code-server@root",
+              ]
+            }
+            name      = "InstallCodeSecer"
+            onFailure = "Abort"
+          },
+          {
+            action = "ExecuteBash"
+            inputs = {
+              commands = [
+                <<EOT
+LOCAL_PASS = $(aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.code_server_password.arn} --query SecretString --output text)
+sudo tee /root/.config/code-server/config.yaml > /dev/null <<EOF
+bind-addr: 0.0.0.0:8080
+auth: password
+password: $LOCAL_PASS
+cert: false
+EOF
+                EOT
+              ]
+            }
+            name      = "ConfigureCodeSecer"
+            onFailure = "Abort"
+          },
+        ]
+      },
+      {
+        name = "validate"
+        steps = [{
+          action = "ExecuteBash"
+          inputs = {
+            commands = [
+              "systemctl is-active --quiet code-server@root.service",
+              "test $? -eq 0 || exit 1",
+              # "response=$(curl --silent --output /dev/null localhost:8080/login)",
+              # "test $? -eq 0 || exit 1",
+            ]
+          }
+          name      = "ValidateCodeServer"
+          onFailure = "Abort"
+        }]
+      },
+    ]
+    schemaVersion = 1.0
+  })
+  name     = "Install code-server binary"
+  platform = "Linux"
+  version  = "1.0.3"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_imagebuilder_distribution_configuration" "code_server_distribution" {
@@ -102,6 +184,7 @@ resource "aws_iam_role" "image_builder_role" {
     data.aws_iam_policy.ssm_policy.arn,
     data.aws_iam_policy.image_builder_policy.arn,
     aws_iam_policy.image_builder_s3.arn,
+    aws_iam_policy.image_builder_secrets_manager.arn,
   ]
 }
 
@@ -114,7 +197,7 @@ data "aws_iam_policy" "image_builder_policy" {
 }
 
 resource "aws_iam_policy" "image_builder_s3" {
-  name        = "EC2ImageBuilderS3"
+  name = "EC2ImageBuilderS3"
   # description = "My test policy"
 
   policy = jsonencode({
@@ -127,6 +210,24 @@ resource "aws_iam_policy" "image_builder_s3" {
         ]
         Effect   = "Allow"
         Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_iam_policy" "image_builder_secrets_manager" {
+  name        = "EC2ImageBuilderSecretsManager"
+  description = "Policy allowing the Image Builder instance to pull the password for the code-server UI"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "secretsmanager:GetSecretValue",
+        ]
+        Effect   = "Allow"
+        Resource = aws_secretsmanager_secret.code_server_password.arn
       },
     ]
   })
@@ -153,4 +254,37 @@ resource "aws_security_group" "image_builder" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
+}
+
+resource "aws_secretsmanager_secret" "code_server_password" {
+  name = "code-server-password"
+}
+
+resource "aws_secretsmanager_secret_policy" "code_server_password_policy" {
+  secret_arn = aws_secretsmanager_secret.code_server_password.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "secretsmanager:GetSecretValue"
+        Effect = "Allow"
+        Principal = {
+          AWS = aws_iam_role.image_builder_role.arn
+        },
+        Resource = aws_secretsmanager_secret.code_server_password.arn
+      },
+    ]
+  })
+}
+
+resource "aws_secretsmanager_secret_version" "code_server_password" {
+  secret_id     = aws_secretsmanager_secret.code_server_password.id
+  secret_string = var.code_server_password != null ? var.code_server_password : random_password.code_server_password[0].result
+}
+
+resource "random_password" "code_server_password" {
+  count   = var.code_server_password == null ? 1 : 0
+  length  = 16
+  special = false
 }
