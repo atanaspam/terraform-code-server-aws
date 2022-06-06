@@ -92,7 +92,8 @@ module "code_server_aws" {
   vpc_id           = module.vpc.vpc_id
   private_subnets  = module.vpc.private_subnets
   public_subnets   = module.vpc.public_subnets
-  base_domain_name = random_string.random_dns_name.result.net
+  base_domain_name = "todot"
+  path_to_settings_json = "example_settings.json"
 }
 
 
