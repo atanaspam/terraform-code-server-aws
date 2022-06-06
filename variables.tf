@@ -30,3 +30,9 @@ variable "code_server_password" {
   sensitive   = true
   default     = null
 }
+
+variable "path_to_settings_json" {
+  type        = string
+  description = "The path to a settings.json file to be used for vs code settings."
+  default     = null
+}

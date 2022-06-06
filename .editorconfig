@@ -20,3 +20,6 @@ trim_trailing_whitespace = false
 
 [*.terraform-version]
 insert_final_newline = false
+
+[*.json]
+insert_final_newline = false

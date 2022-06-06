@@ -30,10 +30,6 @@ resource "aws_imagebuilder_image_pipeline" "code_server_pipeline" {
     image_tests_enabled = true
     timeout_minutes     = 60
   }
-
-  depends_on = [
-    aws_imagebuilder_component.install_code_server_binary
-  ]
 }
 
 resource "aws_imagebuilder_image_recipe" "code_server_recepie" {
@@ -70,10 +66,6 @@ resource "aws_imagebuilder_image_recipe" "code_server_recepie" {
   name         = "code-server-base-ubuntu"
   parent_image = "arn:aws:imagebuilder:${var.region}:aws:image/ubuntu-server-20-lts-x86/x.x.x"
   version      = "0.0.1"
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "aws_imagebuilder_component" "install_code_server_binary" {
@@ -82,6 +74,7 @@ resource "aws_imagebuilder_component" "install_code_server_binary" {
       {
         name = "build"
         steps = [
+          # Could use WebDownload or S3Download to obtain config.yaml and settings.json
           {
             action = "ExecuteBash"
             inputs = {
@@ -101,12 +94,16 @@ resource "aws_imagebuilder_component" "install_code_server_binary" {
             action = "ExecuteBash"
             inputs = {
               commands = [
-                "export LOCAL_PASS=$(aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.code_server_password.arn} --query SecretString --output text)",
+                <<EOT
+sudo tee /root/.local/share/code-server/User/settings.json > /dev/null <<EOF
+${try(file(var.path_to_settings_json), "")}
+EOF
+                EOT
+                ,
                 <<EOT
 sudo tee /root/.config/code-server/config.yaml > /dev/null <<EOF
 bind-addr: 0.0.0.0:8080
-auth: password
-password: $LOCAL_PASS
+auth: none
 cert: false
 EOF
                 EOT
