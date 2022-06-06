@@ -1,7 +1,6 @@
 locals {
   domain_name = "code-server.${var.base_domain_name}"
 }
-
 data "aws_route53_zone" "this" {
   name = var.base_domain_name
 }
@@ -51,7 +50,21 @@ module "alb" {
     {
       port               = 443
       protocol           = "HTTPS"
+      action_type        = "authenticate-cognito"
+      target_group_index = 0
       certificate_arn    = module.acm.acm_certificate_arn
+      authenticate_cognito = {
+        authentication_request_extra_params = {
+          display = "page"
+          prompt  = "login"
+        }
+        on_unauthenticated_request = "authenticate"
+        session_cookie_name        = "session-code-server"
+        session_timeout            = 3600
+        user_pool_arn              = aws_cognito_user_pool.pool.arn
+        user_pool_client_id        = aws_cognito_user_pool_client.pool_client.id
+        user_pool_domain           = aws_cognito_user_pool_domain.domain.domain
+      }
     }
   ]
 
@@ -82,15 +95,6 @@ resource "aws_security_group" "code_server_lb_security_group" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = []
   }
-
-  # ingress {
-  #   description      = "TEMP HTTP from internet"
-  #   from_port        = 80
-  #   to_port          = 8080
-  #   protocol         = "tcp"
-  #   cidr_blocks      = ["0.0.0.0/0"]
-  #   ipv6_cidr_blocks = []
-  # }
 
   ingress {
     description      = "HTTP from VPC"

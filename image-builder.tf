@@ -7,6 +7,12 @@ resource "aws_cloudwatch_log_group" "code_server_recepie_log_group" {
   retention_in_days = 5
 }
 
+resource "aws_imagebuilder_image" "code_server_image" {
+  distribution_configuration_arn   = aws_imagebuilder_distribution_configuration.code_server_distribution.arn
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.code_server_recepie.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.code_server_config.arn
+}
+
 resource "aws_imagebuilder_image_pipeline" "code_server_pipeline" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.code_server_recepie.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.code_server_config.arn
@@ -63,7 +69,7 @@ resource "aws_imagebuilder_image_recipe" "code_server_recepie" {
 
   name         = "code-server-base-ubuntu"
   parent_image = "arn:aws:imagebuilder:${var.region}:aws:image/ubuntu-server-20-lts-x86/x.x.x"
-  version      = "0.0.4"
+  version      = "0.0.1"
 
   lifecycle {
     create_before_destroy = true
@@ -95,8 +101,8 @@ resource "aws_imagebuilder_component" "install_code_server_binary" {
             action = "ExecuteBash"
             inputs = {
               commands = [
+                "export LOCAL_PASS=$(aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.code_server_password.arn} --query SecretString --output text)",
                 <<EOT
-LOCAL_PASS = $(aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.code_server_password.arn} --query SecretString --output text)
 sudo tee /root/.config/code-server/config.yaml > /dev/null <<EOF
 bind-addr: 0.0.0.0:8080
 auth: password
@@ -106,7 +112,7 @@ EOF
                 EOT
               ]
             }
-            name      = "ConfigureCodeSecer"
+            name      = "ConfigureCodeServer"
             onFailure = "Abort"
           },
         ]
@@ -132,11 +138,7 @@ EOF
   })
   name     = "Install code-server binary"
   platform = "Linux"
-  version  = "0.0.4"
-
-  lifecycle {
-    create_before_destroy = true
-  }
+  version  = "0.0.1"
 }
 
 resource "aws_imagebuilder_distribution_configuration" "code_server_distribution" {
@@ -254,37 +256,4 @@ resource "aws_security_group" "image_builder" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
-}
-
-resource "aws_secretsmanager_secret" "code_server_password" {
-  name = "code-server-password"
-}
-
-resource "aws_secretsmanager_secret_policy" "code_server_password_policy" {
-  secret_arn = aws_secretsmanager_secret.code_server_password.arn
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "secretsmanager:GetSecretValue"
-        Effect = "Allow"
-        Principal = {
-          AWS = aws_iam_role.image_builder_role.arn
-        },
-        Resource = aws_secretsmanager_secret.code_server_password.arn
-      },
-    ]
-  })
-}
-
-resource "aws_secretsmanager_secret_version" "code_server_password" {
-  secret_id     = aws_secretsmanager_secret.code_server_password.id
-  secret_string = var.code_server_password != null ? var.code_server_password : random_password.code_server_password[0].result
-}
-
-resource "random_password" "code_server_password" {
-  count   = var.code_server_password == null ? 1 : 0
-  length  = 16
-  special = false
 }
