@@ -71,15 +71,33 @@ resource "aws_security_group" "vpc_tls" {
   }
 }
 
+resource "random_string" "random_dns_name" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+# resource "aws_route53_zone" "code_server_zone" {
+#   name = "${random_dns_name.result}.net"
+# }
+
 ################################################################################
 # code-server-aws Module
 ################################################################################
 
-module "code-server-aws" {
+module "code_server_aws" {
   source = "../"
 
-  region          = local.region
-  vpc_id          = module.vpc.vpc_id
-  private_subnets = module.vpc.private_subnets
-  public_subnets  = module.vpc.public_subnets
+  region           = local.region
+  vpc_id           = module.vpc.vpc_id
+  private_subnets  = module.vpc.private_subnets
+  public_subnets   = module.vpc.public_subnets
+  base_domain_name = random_string.random_dns_name.result.net
+}
+
+
+output "code_server_password" {
+  value       = module.code_server_aws.code_server_password
+  description = "The password for the code-server instance UI."
+  sensitive   = true
 }

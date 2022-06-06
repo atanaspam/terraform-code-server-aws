@@ -1,6 +1,22 @@
+locals {
+  domain_name = "code-server.${var.base_domain_name}"
+}
+
+data "aws_route53_zone" "this" {
+  name = var.base_domain_name
+}
+
+module "acm" {
+  source  = "terraform-aws-modules/acm/aws"
+  version = "~> 3.0"
+
+  domain_name = local.domain_name
+  zone_id     = data.aws_route53_zone.this.id
+}
+
 module "alb" {
   source  = "terraform-aws-modules/alb/aws"
-  version = "~> 6.0"
+  version = "~> 7.0"
 
   name = "code-server-alb"
 
@@ -31,19 +47,24 @@ module "alb" {
     },
   ]
 
-  # https_listeners = [
-  #   {
-  #     port               = 443
-  #     protocol           = "HTTPS"
-  #     certificate_arn    = "arn:aws:iam::123456789012:server-certificate/test_cert-123456789012"
-  #     target_group_index = 0
-  #   }
-  # ]
+  https_listeners = [
+    {
+      port               = 443
+      protocol           = "HTTPS"
+      certificate_arn    = module.acm.acm_certificate_arn
+    }
+  ]
 
   http_tcp_listeners = [
     {
-      port     = 8080
-      protocol = "HTTP"
+      port        = 80
+      protocol    = "HTTP"
+      action_type = "redirect"
+      redirect = {
+        port        = "443"
+        protocol    = "HTTPS"
+        status_code = "HTTP_301"
+      }
     }
   ]
 }
@@ -58,18 +79,18 @@ resource "aws_security_group" "code_server_lb_security_group" {
     from_port        = 443
     to_port          = 443
     protocol         = "tcp"
-    cidr_blocks      = [data.aws_vpc.target.cidr_block]
-    ipv6_cidr_blocks = []
-  }
-
-  ingress {
-    description      = "TEMP HTTP from internet"
-    from_port        = 80
-    to_port          = 8080
-    protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = []
   }
+
+  # ingress {
+  #   description      = "TEMP HTTP from internet"
+  #   from_port        = 80
+  #   to_port          = 8080
+  #   protocol         = "tcp"
+  #   cidr_blocks      = ["0.0.0.0/0"]
+  #   ipv6_cidr_blocks = []
+  # }
 
   ingress {
     description      = "HTTP from VPC"
@@ -89,7 +110,14 @@ resource "aws_security_group" "code_server_lb_security_group" {
   }
 }
 
-# resource "aws_autoscaling_attachment" "asg_to_alb" {
-#   autoscaling_group_name = module.autoscaling.autoscaling_group_name
-#   lb_target_group_arn    = module.alb.target_group_arns[0]
-# }
+resource "aws_route53_record" "code_server_dns_record" {
+  zone_id = data.aws_route53_zone.this.id
+  name    = local.domain_name
+  type    = "A"
+
+  alias {
+    name                   = module.alb.lb_dns_name
+    zone_id                = module.alb.lb_zone_id
+    evaluate_target_health = true
+  }
+}

@@ -14,9 +14,13 @@ variable "public_subnets" {
   type = list(string)
 }
 
+variable "base_domain_name" {
+  type = string
+}
+
 variable "code_server_password" {
   type        = string
-  description = "The password to be used by the code-server instance for authentication"
+  description = "The password to be used for logging in to the code-server instance "
   sensitive   = true
   default     = null
 }

@@ -7,6 +7,10 @@ data "aws_ami" "code_server" {
     name   = "name"
     values = ["code-server-base-ubuntu*"]
   }
+
+  depends_on = [
+    aws_imagebuilder_image.code_server_image
+  ]
 }
 
 resource "aws_iam_instance_profile" "code_server_profile" {
@@ -104,7 +108,7 @@ module "autoscaling" {
   version = "~> 6.0"
 
   # Autoscaling group
-  name = "code-server-asg"
+  name              = "code-server-asg"
   target_group_arns = [module.alb.target_group_arns[0]]
 
   vpc_zone_identifier = var.private_subnets
