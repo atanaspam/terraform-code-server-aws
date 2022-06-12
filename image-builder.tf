@@ -63,6 +63,13 @@ resource "aws_imagebuilder_image_recipe" "code_server_recepie" {
     component_arn = "arn:aws:imagebuilder:${var.region}:aws:component/simple-boot-test-linux/x.x.x"
   }
 
+  dynamic "component" {
+    for_each = var.attach_persistent_storage ? [1] : []
+    content {
+      component_arn = aws_imagebuilder_component.prepare_efs[0].arn
+    }
+  }
+
   name         = "code-server-base-ubuntu"
   parent_image = "arn:aws:imagebuilder:${var.region}:aws:image/ubuntu-server-20-lts-x86/x.x.x"
   version      = "0.0.1"
@@ -135,6 +142,37 @@ EOF
     schemaVersion = 1.0
   })
   name     = "Install code-server binary"
+  platform = "Linux"
+  version  = "0.0.1"
+}
+
+resource "aws_imagebuilder_component" "prepare_efs" {
+  count = var.attach_persistent_storage ? 1 : 0
+  data = yamlencode({
+    phases = [
+      {
+        name = "build"
+        steps = [
+          # Could use WebDownload or S3Download to obtain config.yaml and settings.json
+          {
+            action = "ExecuteBash"
+            inputs = {
+              commands = [
+                "sudo mkdir /mnt/efs",
+                "sudo apt update",
+                "sudo apt install nfs-kernel-server -y",
+                "echo '${aws_efs_file_system.persistent_fs[0].id}.efs.${var.region}.amazonaws.com:/ /mnt/efs nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport,_netdev 0 0' | sudo tee -a /etc/fstab"
+              ]
+            }
+            name      = "PerpareEFS"
+            onFailure = "Abort"
+          },
+        ]
+      },
+    ]
+    schemaVersion = 1.0
+  })
+  name     = "Install and Configure EFS"
   platform = "Linux"
   version  = "0.0.1"
 }

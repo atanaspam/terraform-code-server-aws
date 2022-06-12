@@ -36,3 +36,9 @@ variable "path_to_settings_json" {
   description = "The path to a settings.json file to be used for vs code settings."
   default     = null
 }
+
+variable "attach_persistent_storage" {
+  type = bool
+  description = "When set to 'true' an EFS volume will be attached to the code-server where data can be persisted accros instance restarts."
+  default = false
+}

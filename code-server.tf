@@ -49,6 +49,15 @@ resource "aws_security_group" "code_server" {
   }
 
   ingress {
+    description      = "EFS from VPC"
+    from_port        = 2049
+    to_port          = 2049
+    protocol         = "tcp"
+    cidr_blocks      = [data.aws_vpc.target.cidr_block]
+    ipv6_cidr_blocks = []
+  }
+
+  ingress {
     description      = "HTTP from VPC"
     from_port        = 8080
     to_port          = 8080
