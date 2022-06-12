@@ -285,6 +285,15 @@ resource "aws_security_group" "image_builder" {
     ipv6_cidr_blocks = []
   }
 
+  ingress {
+    description      = "EFS from VPC"
+    from_port        = 2049
+    to_port          = 2049
+    protocol         = "tcp"
+    cidr_blocks      = [data.aws_vpc.target.cidr_block]
+    ipv6_cidr_blocks = []
+  }
+
   egress {
     from_port        = 0
     to_port          = 0
