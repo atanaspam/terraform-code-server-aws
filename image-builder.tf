@@ -107,7 +107,7 @@ ${try(file(var.path_to_settings_json), "")}
 EOF
                 EOT
                 ,
-                "export LOCAL_PASS=$(aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.code_server_password.arn} --query SecretString --output text)",  #TODO remove me
+                "export LOCAL_PASS=$(aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.code_server_password.arn} --query SecretString --output text)", #TODO remove me
                 <<EOT
 sudo tee /root/.config/code-server/config.yaml > /dev/null <<EOF
 bind-addr: 0.0.0.0:8080
