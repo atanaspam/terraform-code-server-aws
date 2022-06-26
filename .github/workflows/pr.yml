@@ -1,0 +1,30 @@
+name: "Pull Request"
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+
+env:
+  TERRAFORM_DOCS_VERSION: v0.16.0
+
+jobs:
+  preCommitTerraform:
+    name: Terraform pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+
+      - name: Terraform latest version
+        id: minMax
+        uses: clowdhaus/terraform-min-max@v1.0.8
+
+      - name: Pre-commit Terraform ${{ steps.minMax.outputs.maxVersion }}
+        uses: clowdhaus/terraform-composite-actions/pre-commit@v1.5.0
+        with:
+          terraform-version: 1.1.7
+          terraform-docs-version: ${{ env.TERRAFORM_DOCS_VERSION }}

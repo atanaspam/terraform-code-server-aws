@@ -13,7 +13,7 @@ resource "aws_efs_file_system_policy" "policy" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Id = "CodeServerEFSPolicy"
+    Id      = "CodeServerEFSPolicy"
     Statement = [
       {
         Effect = "Allow"
@@ -60,8 +60,8 @@ resource "aws_security_group" "code_server_efs" {
 }
 
 resource "aws_efs_mount_target" "alpha" {
-  for_each = var.attach_persistent_storage ? toset(var.private_subnets) : []
-  file_system_id = aws_efs_file_system.persistent_fs[0].id
-  subnet_id      = each.key
+  for_each        = var.attach_persistent_storage ? toset(var.private_subnets) : []
+  file_system_id  = aws_efs_file_system.persistent_fs[0].id
+  subnet_id       = each.key
   security_groups = [aws_security_group.code_server_efs[0].id]
 }

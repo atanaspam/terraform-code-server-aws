@@ -1,21 +1,26 @@
 variable "region" {
-  type = string
+  type        = string
+  description = "The AWS region to deploy the code-server instance to."
 }
 
 variable "vpc_id" {
-  type = string
+  type        = string
+  description = "The VPC ID where the code-server instance will be deployed."
 }
 
 variable "private_subnets" {
-  type = list(string)
+  type        = list(string)
+  description = "A list of private subnets to be used by the code-server instance."
 }
 
 variable "public_subnets" {
-  type = list(string)
+  type        = list(string)
+  description = "A list of public subnets to be used by the code-server instance."
 }
 
 variable "base_domain_name" {
-  type = string
+  type        = string
+  description = "The domain to be used when genrerating a URL for the code-server instance."
 }
 
 variable "code_server_username" {
@@ -38,7 +43,7 @@ variable "path_to_settings_json" {
 }
 
 variable "attach_persistent_storage" {
-  type = bool
+  type        = bool
   description = "When set to 'true' an EFS volume will be attached to the code-server where data can be persisted accros instance restarts."
-  default = false
+  default     = false
 }
