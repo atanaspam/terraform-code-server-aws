@@ -116,7 +116,7 @@ module "autoscaling" {
   name              = "code-server-asg"
   target_group_arns = [module.alb.target_group_arns[0]]
 
-  vpc_zone_identifier = var.private_subnets
+  vpc_zone_identifier = local.target_subnets
   min_size            = 0
   max_size            = 1
   desired_capacity    = 1

@@ -18,6 +18,12 @@ variable "base_domain_name" {
   type = string
 }
 
+variable "deploy_to_public_subnets" {
+  type = bool
+  description = "If set to true all instances will be deployed in the public subnets. Otherwise VPC endpoints are required."
+  default = true
+}
+
 variable "code_server_username" {
   type        = string
   description = "The username to be used for logging in to the code-server instance."
