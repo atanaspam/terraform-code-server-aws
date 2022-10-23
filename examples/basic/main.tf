@@ -100,7 +100,7 @@ resource "random_string" "random_dns_name" {
 ################################################################################
 
 module "code_server_aws" {
-  source = "../"
+  source = "../../"
 
   region                    = local.region
   vpc_id                    = module.vpc.vpc_id
