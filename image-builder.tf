@@ -194,7 +194,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "code_server_config" {
   instance_types                = ["t3.micro"]
   name                          = "code-server-infrastructure"
   security_group_ids            = [aws_security_group.image_builder.id]
-  subnet_id                     = var.private_subnets[0]
+  subnet_id                     = local.target_subnets[0]
   terminate_instance_on_failure = true
 }
 

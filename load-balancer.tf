@@ -1,6 +1,7 @@
 locals {
   domain_name = "code-server.${var.base_domain_name}"
 }
+
 data "aws_route53_zone" "this" {
   name = var.base_domain_name
 }
