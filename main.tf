@@ -1,3 +1,7 @@
+locals {
+  target_subnets = var.deploy_to_public_subnets == true ? var.public_subnets : var.private_subnets
+}
+
 data "aws_ami" "code_server" {
   # executable_users = ["self"]
   most_recent = true

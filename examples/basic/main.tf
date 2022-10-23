@@ -91,9 +91,9 @@ resource "random_string" "random_dns_name" {
   upper   = false
 }
 
-# resource "aws_route53_zone" "code_server_zone" {
-#   name = "${random_dns_name.result}.net"
-# }
+resource "aws_route53_zone" "code_server_zone" {
+  name = "${random_string.random_dns_name.result}.net"
+}
 
 ################################################################################
 # code-server-aws Module
@@ -106,7 +106,7 @@ module "code_server_aws" {
   vpc_id                    = module.vpc.vpc_id
   private_subnets           = module.vpc.private_subnets
   public_subnets            = module.vpc.public_subnets
-  base_domain_name          = "maturite.net"
+  base_domain_name          = aws_route53_zone.code_server_zone.name
   path_to_settings_json     = "example_settings.json"
   attach_persistent_storage = true
 }
