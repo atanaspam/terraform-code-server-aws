@@ -106,11 +106,7 @@ module "code_server_aws" {
   vpc_id                    = module.vpc.vpc_id
   private_subnets           = module.vpc.private_subnets
   public_subnets            = module.vpc.public_subnets
-<<<<<<< HEAD
   base_domain_name          = aws_route53_zone.code_server_zone.name
-=======
-  base_domain_name          = "maturite.net"
->>>>>>> 47301d5 (ci: Introduce GitHub Actions Pipelines and commit hooks. (#1))
   path_to_settings_json     = "example_settings.json"
   attach_persistent_storage = true
 }
