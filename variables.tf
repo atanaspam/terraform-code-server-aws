@@ -24,9 +24,9 @@ variable "base_domain_name" {
 }
 
 variable "deploy_to_public_subnets" {
-  type = bool
+  type        = bool
   description = "If set to true all instances will be deployed in the public subnets. Otherwise VPC endpoints are required."
-  default = true
+  default     = true
 }
 
 variable "code_server_username" {
