@@ -58,7 +58,7 @@ jobs:
           terraform-docs-version: ${{ env.TERRAFORM_DOCS_VERSION }}
           args: 'terraform_validate --color=always --show-diff-on-failure --files $(ls *.tf)'
 
-preCommitMinTerraform:
+  preCommitMinTerraform:
     name: Terraform pre-commit for max version
     runs-on: ubuntu-latest
     needs: directories
