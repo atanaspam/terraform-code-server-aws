@@ -3,7 +3,6 @@ locals {
 }
 
 data "aws_ami" "code_server" {
-  # executable_users = ["self"]
   most_recent = true
   owners      = ["self"]
 
@@ -11,6 +10,8 @@ data "aws_ami" "code_server" {
     name   = "name"
     values = ["code-server-base-ubuntu*"]
   }
+
+  depends_on = [aws_imagebuilder_image.code_server_image]
 }
 
 resource "aws_iam_instance_profile" "code_server_profile" {
