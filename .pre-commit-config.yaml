@@ -27,4 +27,4 @@ repos:
     hooks:
       - id: check-merge-conflict
       - id: end-of-file-fixer
-        exclude: '.terraform-version'
+        exclude: '.tool-versions'
