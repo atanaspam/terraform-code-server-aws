@@ -1,3 +1,17 @@
+provider "aws" {
+  region = local.region
+
+  default_tags {
+    tags = {
+      Application = "code-server"
+    }
+  }
+}
+
+locals {
+  region = "eu-central-1"
+}
+
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -86,19 +100,13 @@ resource "random_string" "random_dns_name" {
 ################################################################################
 
 module "code_server_aws" {
-  source = "../"
+  source = "../../"
 
-  region           = local.region
-  vpc_id           = module.vpc.vpc_id
-  private_subnets  = module.vpc.private_subnets
-  public_subnets   = module.vpc.public_subnets
-  base_domain_name = "todot"
-  path_to_settings_json = "example_settings.json"
-}
-
-
-output "code_server_password" {
-  value       = module.code_server_aws.code_server_password
-  description = "The password for the code-server instance UI."
-  sensitive   = true
+  region                    = local.region
+  vpc_id                    = module.vpc.vpc_id
+  private_subnets           = module.vpc.private_subnets
+  public_subnets            = module.vpc.public_subnets
+  base_domain_name          = "maturite.net"
+  path_to_settings_json     = "example_settings.json"
+  attach_persistent_storage = true
 }
