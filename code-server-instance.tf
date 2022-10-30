@@ -121,7 +121,7 @@ module "code_server_autoscaling" {
   vpc_zone_identifier = local.target_subnets
   min_size            = 0
   max_size            = 1
-  desired_capacity    = 1
+  desired_capacity    = var.start_code_server_on_deployment ? 1 : 0
 
   # Launch template
   create_launch_template  = false

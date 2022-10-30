@@ -10,25 +10,27 @@ def lambda_handler(event, context):
     region = os.environ['AWS_REGION']
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
+    logger.info(event)
 
-    # try:
-    validate_event_schema(event)
-    # except jsonschema.exceptions.ValidationError as e:
-    #     raise LambdaException({
-    #         "isError": True,
-    #         "type":  e.__class__.__name__,
-    #         "message": str(e)
-    #     })
-    # except json.decoder.JSONDecodeError as e:
-    #     raise LambdaException({
-    #         "isError": True,
-    #         "type":  e.__class__.__name__,
-    #         "message": "Failed to parse input. Please refer to the documentation for the appropriate input format."
-    #     })
+    try:
+    json_body = validate_event_schema(event['body'])
+    except Exception as e:
+        logger.error('Failed to validate input')
+        logger.error(str(e))
+        return {
+                'statusCode': 500,
+                'body': 'Failed to validate input. Please consult the documentation for the appropriate format.'
+            }
 
     client = boto3.client('autoscaling', region_name=region)
 
-    desired_capacity = event['desired_capacity']
+    desired_capacity = json_body['DesiredCapacity']
+    if desired_capacity != 1 or desired_capacity != 0:
+        logger.error(f'Invalid capacity requested: {desired_capacity}')
+        return {
+                'statusCode': 400,
+                'body': f'Invalid capacity requested: {desired_capacity}. Only 1 and 0 are supported.'
+            }
     response = client.set_desired_capacity(
         AutoScalingGroupName=asg_name,
         DesiredCapacity=desired_capacity,
@@ -38,11 +40,13 @@ def lambda_handler(event, context):
     return({'status':'success'})
 
 
-def validate_event_schema(event: Dict[Any, Any]) -> Dict[str, int]:
+def validate_event_schema(event_body: str) -> Dict[str, int]:
     schema = {
         "type" : "object",
         "properties" : {
-            "desired_capacity" : {"type" : "number"},
+            "DesiredCapacity" : {"type" : "number"},
         },
     }
-    validate(instance=event, schema=schema)
+    json_event = json.loads(event_body)
+    validate(instance=json_event, schema=schema)
+    return(json_event)

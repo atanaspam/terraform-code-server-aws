@@ -1,9 +1,6 @@
 import boto3
 import os
-import json
 import logging
-from jsonschema import validate 
-from typing import Dict, Any
 
 def lambda_handler(event, context):
     asg_name = os.environ['ASG_NAME']
@@ -36,7 +33,14 @@ def lambda_handler(event, context):
         else:
             logger.error('No ASG in response')
             logger.error(response)
-            return('No ASG in response')
+            return({
+                'statusCode': 404,
+                'body': 'No ASG in response'
+            })
     else:
         logger.error('Bad response')
         logger.error(response)
+        return({
+                'statusCode': 500,
+                'body': 'Bad response'
+            })

@@ -1,7 +1,3 @@
-locals {
-  domain_name = "code-server.${var.base_domain_name}"
-}
-
 module "load_balancer_acm_certificate" {
   source  = "terraform-aws-modules/acm/aws"
   version = "~> 3.0"

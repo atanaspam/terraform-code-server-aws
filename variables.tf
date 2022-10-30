@@ -53,3 +53,9 @@ variable "attach_persistent_storage" {
   description = "When set to 'true' an EFS volume will be attached to the code-server where data can be persisted accros instance restarts."
   default     = false
 }
+
+variable "start_code_server_on_deployment" {
+  type        = bool
+  description = "When set to 'true' the the instance will start automatically upon deployment. Otherwise a manual scale command is expected to start the server."
+  default     = true
+}

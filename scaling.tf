@@ -118,12 +118,6 @@ module "code_server_controller_api_gateway" {
       authorizer_key         = "cognito"
     }
 
-    # "GET /some-route-with-authorizer" = {
-    #   integration_type = "HTTP_PROXY"
-    #   integration_uri  = "some url"
-    #   authorizer_key   = "azure"
-    # }
-
     "$default" = {
       lambda_arn = module.lambda_function_get_capacity.lambda_function_arn
     }
@@ -144,23 +138,24 @@ module "controller_acm_certificate" {
   source  = "terraform-aws-modules/acm/aws"
   version = "~> 3.0"
 
-  domain_name = local.controller_domain_name
-  zone_id     = data.aws_route53_zone.this.id
+  domain_name               = local.controller_domain_name
+  zone_id                   = data.aws_route53_zone.this.id
+  subject_alternative_names = ["api.${local.domain_name}"]
+}
+
+resource "aws_route53_record" "code_server_controller_dns_record" {
+  zone_id = data.aws_route53_zone.this.id
+  name    = "api.${local.domain_name}"
+  type    = "A"
+
+  alias {
+    name                   = module.code_server_controller_api_gateway.apigatewayv2_domain_name_target_domain_name
+    zone_id                = module.code_server_controller_api_gateway.apigatewayv2_domain_name_hosted_zone_id
+    evaluate_target_health = false
+  }
 }
 
 resource "aws_cloudwatch_log_group" "code_server_controller_log_group" {
   name              = "code-server-controller-api-gateway-logs"
   retention_in_days = 5
 }
-
-# resource "aws_apigatewayv2_authorizer" "some_authorizer" {
-#   api_id           = module.code_server_controller_api_gateway.apigatewayv2_api_id
-#   authorizer_type  = "JWT"
-#   identity_sources = ["$request.header.Authorization"]
-#   name             = "code-server-authorizer"
-
-#   jwt_configuration {
-#     audience = [aws_cognito_user_pool_client.pool_client.id]
-#     issuer   = "https://${aws_cognito_user_pool.this.endpoint}"
-#   }
-# }
