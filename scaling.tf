@@ -1,17 +1,18 @@
-module "scaling_lambda_function" {
+module "lambda_function_set_capacity" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "~> 4.2"
 
-  function_name = "code-server-scaling-lambda"
+  function_name = "code-server-set-capacity"
   description   = "Lambda responsible for scaling the code-server instance upon request"
   handler       = "index.lambda_handler"
   runtime       = "python3.9"
   publish       = true
+  timeout       = 10
 
 
   source_path = [{
-    path             = "../src/code-server-scaling-lambda"
-    pip_requirements = "../src/code-server-scaling-lambda/requirements.txt"
+    path             = "${path.module}/src/code-server-set-capacity"
+    pip_requirements = "${path.module}/src/code-server-set-capacity/requirements.txt"
   }]
 
   allowed_triggers = {
@@ -27,23 +28,56 @@ module "scaling_lambda_function" {
 
   attach_policy_statements = true
   policy_statements = {
-    ec2 = {
+    autoscalingModify = {
       effect    = "Allow",
-      actions   = ["autoscaling:UpdateAutoScalingGroup", "autoscaling:DescribeAutoScalingGroups", "autoscaling:SetDesiredCapacity"],
-      resources = [module.code_server_autoscaling.autoscaling_group_arn]
-      #   condition = {
-      #     stringequals_condition = {
-      #       test     = "StringEquals"
-      #       variable = "ec2:ResourceTag/Component"
-      #       values   = ["code-server ASG"]
-      #     }
-      #   }
+      actions   = ["autoscaling:UpdateAutoScalingGroup", "autoscaling:SetDesiredCapacity"],
+      resources = ["*"]
+      condition = {
+        stringequals_condition = {
+          test     = "StringEquals"
+          variable = "autoscaling:ResourceTag/Application"
+          values   = ["code-server"]
+        }
+      }
     },
   }
+}
 
-  #   environment_variables = {
-  #     Serverless = "Terraform"
-  #   }
+module "lambda_function_get_capacity" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 4.2"
+
+  function_name = "code-server-get-capacity"
+  description   = "Lambda responsible for presenting the current code-server scaling info"
+  handler       = "index.lambda_handler"
+  runtime       = "python3.9"
+  publish       = true
+  timeout       = 5
+
+
+  source_path = [{
+    path = "${path.module}/src/code-server-get-capacity"
+  }]
+
+  allowed_triggers = {
+    APIGateway = {
+      service    = "apigateway"
+      source_arn = "${module.code_server_controller_api_gateway.apigatewayv2_api_execution_arn}/*/*/*"
+    }
+  }
+
+  environment_variables = {
+    ASG_NAME = module.code_server_autoscaling.autoscaling_group_name
+  }
+
+  attach_policy_statements = true
+  policy_statements = {
+    autoscalingDescribe = {
+      effect    = "Allow",
+      actions   = ["autoscaling:DescribeAutoScalingGroups"],
+      resources = ["*"]
+    },
+  }
 }
 
 module "code_server_controller_api_gateway" {
@@ -71,9 +105,16 @@ module "code_server_controller_api_gateway" {
   # Routes and integrations
   integrations = {
     "POST /scale" = {
-      lambda_arn             = module.scaling_lambda_function.lambda_function_arn
+      lambda_arn             = module.lambda_function_set_capacity.lambda_function_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
+      authorizer_key         = "cognito"
+    }
+
+    "POST /scale" = {
+      lambda_arn             = module.lambda_function_get_capacity.lambda_function_arn
+      payload_format_version = "2.0"
+      timeout_milliseconds   = 7000
       authorizer_key         = "cognito"
     }
 
@@ -84,7 +125,7 @@ module "code_server_controller_api_gateway" {
     # }
 
     "$default" = {
-      lambda_arn = module.scaling_lambda_function.lambda_function_arn
+      lambda_arn = module.lambda_function_get_capacity.lambda_function_arn
     }
   }
 
