@@ -20,11 +20,11 @@ output "code_server_controller_authentication_endpoint" {
 }
 
 output "code_server_controller_endpoint" {
-  value       = "https://${aws_route53_record.code_server_controller_dns_record.name}/scale"
+  value       = module.code_server_controller_api_gateway.apigatewayv2_api_api_endpoint
   description = "The endpoint which can be used to control wether the code-server instance should be running or not."
 }
 
 output "cognito_client_id" {
-  value       = aws_cognito_user_pool_client.pool_client.id
+  value       = aws_cognito_user_pool_client.controller_pool_client.id
   description = "The client id used to authenticate to the code server controller API."
 }

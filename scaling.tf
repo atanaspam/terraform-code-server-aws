@@ -111,7 +111,7 @@ module "code_server_controller_api_gateway" {
       authorizer_key         = "cognito"
     }
 
-    "POST /scale" = {
+    "GET /scale" = {
       lambda_arn             = module.lambda_function_get_capacity.lambda_function_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 7000
@@ -140,12 +140,12 @@ module "controller_acm_certificate" {
 
   domain_name               = local.controller_domain_name
   zone_id                   = data.aws_route53_zone.this.id
-  subject_alternative_names = ["api.${local.domain_name}"]
+  subject_alternative_names = ["api.${local.controller_domain_name}"]
 }
 
 resource "aws_route53_record" "code_server_controller_dns_record" {
+  name    = "api.${local.controller_domain_name}"
   zone_id = data.aws_route53_zone.this.id
-  name    = "api.${local.domain_name}"
   type    = "A"
 
   alias {

@@ -4,6 +4,7 @@ import json
 import logging
 from jsonschema import validate 
 from typing import Dict, Any
+import base64
 
 def lambda_handler(event, context):
     asg_name = os.environ['ASG_NAME']
@@ -12,8 +13,10 @@ def lambda_handler(event, context):
     logger.setLevel(logging.INFO)
     logger.info(event)
 
+    json_body = None
+
     try:
-    json_body = validate_event_schema(event['body'])
+        json_body = validate_event_schema(base64.b64decode(event['body']))
     except Exception as e:
         logger.error('Failed to validate input')
         logger.error(str(e))
@@ -25,7 +28,7 @@ def lambda_handler(event, context):
     client = boto3.client('autoscaling', region_name=region)
 
     desired_capacity = json_body['DesiredCapacity']
-    if desired_capacity != 1 or desired_capacity != 0:
+    if not 0 <= desired_capacity <= 1:
         logger.error(f'Invalid capacity requested: {desired_capacity}')
         return {
                 'statusCode': 400,
