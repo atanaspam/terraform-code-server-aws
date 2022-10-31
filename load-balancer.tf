@@ -1,12 +1,4 @@
-locals {
-  domain_name = "code-server.${var.base_domain_name}"
-}
-
-data "aws_route53_zone" "this" {
-  name = var.base_domain_name
-}
-
-module "acm" {
+module "load_balancer_acm_certificate" {
   source  = "terraform-aws-modules/acm/aws"
   version = "~> 3.0"
 
@@ -53,7 +45,7 @@ module "alb" {
       protocol           = "HTTPS"
       action_type        = "authenticate-cognito"
       target_group_index = 0
-      certificate_arn    = module.acm.acm_certificate_arn
+      certificate_arn    = module.load_balancer_acm_certificate.acm_certificate_arn
       authenticate_cognito = {
         authentication_request_extra_params = {
           display = "page"
