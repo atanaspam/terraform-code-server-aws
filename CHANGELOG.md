@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0](https://github.com/atanaspam/terraform-code-server-aws/compare/v1.2.0...v1.3.0) (2022-11-02)
+
+
+### Features
+
+* changing licence to Apache 2.0 ([#6](https://github.com/atanaspam/terraform-code-server-aws/issues/6)) ([f994856](https://github.com/atanaspam/terraform-code-server-aws/commit/f994856f2f391cee1456db3b719f488943a21df5))
+
 ## [1.2.0](https://github.com/atanaspam/terraform-code-server-aws/compare/v1.1.0...v1.2.0) (2022-11-02)
 
 
