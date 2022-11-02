@@ -1,4 +1,3 @@
-<!-- BEGIN_TF_DOCS -->
 # Code Server AWS Terraform Module
 
 A Terraform module for deploying a standalone personal code-server instance on AWS with batteries incliuded.
@@ -77,11 +76,11 @@ PASSWORD=$(terraform output code_server_password)
 COGNITO_CLIENT_ID=$(terraform output cognito_client_id)
 
 TOKEN=$(aws cognito-idp initiate-auth \
---auth-flow USER_PASSWORD_AUTH \
---auth-parameters \
-USERNAME=$USERNAME,PASSWORD=$PASSWORD \
---client-id $COGNITO_CLIENT_ID \
---qquery "AuthenticationResult.IdToken")
+  --auth-flow USER_PASSWORD_AUTH \
+  --auth-parameters \
+  USERNAME=$USERNAME,PASSWORD=$PASSWORD \
+  --client-id $COGNITO_CLIENT_ID \
+  --qquery "AuthenticationResult.IdToken")
 
 curl -X POST $URL --header "Authorization: $TOKEN" --data-raw '{"DesiredCapacity": 1}'
 ```
@@ -97,6 +96,7 @@ If you choose to opt in for this setting, you also need to attach the appropriat
 * Image Builder: The Image Builder service spins up an instance in the private subnet in order to construct the base AMI
 * S3: The Image Builder components are hosted in S3 and required for building the code-server image
 
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
