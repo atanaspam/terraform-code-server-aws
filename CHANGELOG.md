@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0](https://github.com/atanaspam/terraform-code-server-aws/compare/v1.1.0...v1.2.0) (2022-11-02)
+
+
+### Features
+
+* renamed deploy_to_public_subnets to deploy_to_private_subnets ([#5](https://github.com/atanaspam/terraform-code-server-aws/issues/5)) ([e16fd78](https://github.com/atanaspam/terraform-code-server-aws/commit/e16fd786bfaaf5f27a23be0cc3d27143fdb6bc31))
+
 ## [1.1.0](https://github.com/atanaspam/terraform-code-server-aws/compare/v1.0.1...v1.1.0) (2022-10-31)
 
 
