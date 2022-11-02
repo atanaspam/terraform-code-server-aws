@@ -11,6 +11,7 @@ variable "vpc_id" {
 variable "private_subnets" {
   type        = list(string)
   description = "A list of private subnets to be used by the code-server instance."
+  default     = []
 }
 
 variable "public_subnets" {
@@ -23,10 +24,10 @@ variable "base_domain_name" {
   description = "The domain to be used when genrerating a URL for the code-server instance."
 }
 
-variable "deploy_to_public_subnets" {
+variable "deploy_to_private_subnets" {
   type        = bool
-  description = "If set to true all instances will be deployed in the public subnets. Otherwise VPC endpoints are required."
-  default     = true
+  description = "If set to true all instances will be deployed in the private subnets. When set to true VPC endpoints are required and the 'private_subnets' variable needs to be set."
+  default     = false
 }
 
 variable "code_server_username" {
