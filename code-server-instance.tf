@@ -93,7 +93,7 @@ resource "aws_launch_template" "code_server" {
     arn = aws_iam_instance_profile.code_server_profile.arn
   }
 
-  image_id                             = try(data.aws_ami_ids.code_server.ids[0], element(aws_imagebuilder_image.code_server_image.output_resources[*].amis[*].image, 0)[0])
+  image_id                             = try(data.aws_ami_ids.code_server.ids[0], element(aws_imagebuilder_image.code_server_image[0].output_resources[*].amis[*].image, 0)[0])
   instance_initiated_shutdown_behavior = "terminate"
   instance_type                        = "t3.micro"
   vpc_security_group_ids               = [aws_security_group.code_server.id]

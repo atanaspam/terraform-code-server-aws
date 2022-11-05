@@ -20,7 +20,7 @@ output "code_server_controller_authentication_endpoint" {
 }
 
 output "code_server_controller_endpoint" {
-  value       = module.code_server_controller_api_gateway.apigatewayv2_api_api_endpoint
+  value       = "${module.code_server_controller_api_gateway.apigatewayv2_api_api_endpoint}/scale"
   description = "The endpoint which can be used to control wether the code-server instance should be running or not."
 }
 
