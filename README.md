@@ -70,17 +70,17 @@ curl -X POST $URL --header "Authorization: $TOKEN" --data-raw '{"DesiredCapacity
 or using AWS CLI
 
 ```bash
-URL=$(terraform output code_server_controller_endpoint)
-USERNAME=$(terraform output code_server_username)
-PASSWORD=$(terraform output code_server_password)
-COGNITO_CLIENT_ID=$(terraform output cognito_client_id)
+URL=$(terraform output -raw code_server_controller_endpoint)
+CS_USERNAME=$(terraform output -raw code_server_username)
+CS_PASSWORD=$(terraform output -raw code_server_password)
+COGNITO_CLIENT_ID=$(terraform output -raw cognito_client_id)
 
 TOKEN=$(aws cognito-idp initiate-auth \
   --auth-flow USER_PASSWORD_AUTH \
   --auth-parameters \
-  USERNAME=$USERNAME,PASSWORD=$PASSWORD \
+  USERNAME=$CS_USERNAME,PASSWORD=$CS_PASSWORD \
   --client-id $COGNITO_CLIENT_ID \
-  --qquery "AuthenticationResult.IdToken")
+  --query "AuthenticationResult.IdToken")
 
 curl -X POST $URL --header "Authorization: $TOKEN" --data-raw '{"DesiredCapacity": 1}'
 ```

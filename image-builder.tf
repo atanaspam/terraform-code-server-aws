@@ -8,6 +8,7 @@ resource "aws_cloudwatch_log_group" "code_server_recepie_log_group" {
 }
 
 resource "aws_imagebuilder_image" "code_server_image" {
+  count                            = length(data.aws_ami_ids.code_server.ids) > 1 ? 0 : 1
   distribution_configuration_arn   = aws_imagebuilder_distribution_configuration.code_server_distribution.arn
   image_recipe_arn                 = aws_imagebuilder_image_recipe.code_server_recepie.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.code_server_config.arn

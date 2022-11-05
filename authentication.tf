@@ -81,7 +81,10 @@ resource "aws_secretsmanager_secret_version" "code_server_password" {
 }
 
 resource "random_password" "code_server_password" {
-  count   = var.code_server_password == null ? 1 : 0
-  length  = 16
-  special = false
+  count       = var.code_server_password == null ? 1 : 0
+  length      = 16
+  min_numeric = 1
+  min_lower   = 1
+  min_upper   = 1
+  special     = false
 }
