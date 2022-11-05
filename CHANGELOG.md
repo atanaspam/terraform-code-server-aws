@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0](https://github.com/atanaspam/terraform-code-server-aws/compare/v1.3.0...v1.4.0) (2022-11-05)
+
+
+### Features
+
+* initial Image Builder AMI is now created only if there are no AMIs already available ([#7](https://github.com/atanaspam/terraform-code-server-aws/issues/7)) ([e5dc730](https://github.com/atanaspam/terraform-code-server-aws/commit/e5dc73079f51b474b0412075e90f3df501e7cf39))
+
 ## [1.3.0](https://github.com/atanaspam/terraform-code-server-aws/compare/v1.2.0...v1.3.0) (2022-11-02)
 
 
